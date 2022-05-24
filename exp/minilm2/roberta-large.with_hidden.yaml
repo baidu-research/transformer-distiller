@@ -1,0 +1,48 @@
+# required args
+method: minilm2 
+teacher: roberta-large 
+student: exp/minilm2/roberta_d384_h12_l6.json 
+data:
+  - $PATH_TO_WIKI_TOKENIZED_WITH_ROBERTA/data.h5
+  - $PATH_TO_BOOK_TOKENIZED_WITH_ROBERTA/data.h5
+
+eval-data:
+  - $PATH_TO_MNLI_TOKENIZED_WITH_ROBERTA/data.h5
+
+# Distillation algorithm related args
+teacher-layers: 19
+student-layers: 6
+num-relation-heads: 64
+intermediate-matches:
+  - layer_T: 19
+    layer_S: 5
+    feature: hidden
+    weight: 0.8
+    loss: cos
+    proj: [linear, 384, 1024]
+
+# optimization related args
+opt-type: adamw
+fp16: True
+fp16-opt-level: O1
+max-steps: 500000
+bsz: 384
+#weight-decay: 1e-2
+grad-acc-step: 1
+lr: 1e-4
+lr-scheduler: constant
+#warmup-steps: 1000
+
+# log, ckpt etc
+output-dir: results/minilm2/roberta-large.with_hidden
+ckpt-freq-iter: 10000
+log-freq-iter: 10
+
+# sbatch configs
+# Use comma to separate values if a list
+sbatch:
+    partition: V100x8
+    nodes: 2 
+    ntasks-per-node: 8
+    cpus-per-task: 5 
+    output: results/minilm2/roberta-large.with_hidden/log

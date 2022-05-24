@@ -1,0 +1,62 @@
+# use absolute path throughout
+# required args
+method: distilbert
+teacher: bert-base-uncased
+student: exp/distilbert/distilbert-base-uncased.json 
+data:
+  - $PATH_TO_WIKI_TOKENIZED_WITH_BERT/data.h5
+  - $PATH_TO_BOOK_TOKENIZED_WITH_BERT/data.h5
+eval-data:
+  - $PATH_TO_MNLI_TOKENIZED_WITH_BERT/data.h5
+
+token-counts:
+  - $PATH_TO_WIKI_TOKENIZED_WITH_BERT/token.count 
+  - $PATH_TO_BOOK_TOKENIZED_WITH_BERT/token.count
+
+
+# Distillation algorithm related args
+temperature: 1
+hard-label-weight: 0.0
+kd-loss-type: ce
+kd-loss-weight: 0.5
+lm-type: mlm
+intermediate-matches:
+  - layer_T: 12
+    layer_S: 6
+    feature: hidden
+    weight: 0.5
+    loss: cos
+
+# optimization related args
+opt-type: adamw
+fp16: True
+fp16-opt-level: O1
+max-steps: 500000
+bsz: 256
+#weight-decay: 1e-2
+grad-acc-step: 1
+lr: 1e-4 
+lr-scheduler: constant
+#warmup-steps: 1000
+
+# log, ckpt etc
+output-dir: results/distilbert/bert-base-uncased
+ckpt-freq-iter: 50000
+log-freq-iter: 10
+save-ini: True
+
+# callbacks
+callback:
+  - glue
+  - log_PPL
+glue-task:
+  - mnli
+  - qqp
+
+# sbatch configs
+sbatch:
+    partition: V100x8
+    nodes: 1
+    ntasks-per-node: 8
+    cpus-per-task: 5
+    output: results/distilbert/bert-base-uncased/log
